@@ -52,7 +52,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnName("created_at");
             entity.Property(e => e.Email)
                 .HasMaxLength(150)
-                .HasColumnName("email");
+                .HasColumnName("email").HasColume;
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");

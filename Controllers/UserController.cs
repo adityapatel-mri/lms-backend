@@ -10,7 +10,10 @@ namespace LMS_Backend.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-    
+        public UserController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         // GET: api/User
         [HttpGet]

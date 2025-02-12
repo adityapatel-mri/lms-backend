@@ -62,4 +62,3 @@ CREATE TABLE lead_status_history (
     CONSTRAINT fk_status_lead FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE,
     CONSTRAINT fk_status_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
-

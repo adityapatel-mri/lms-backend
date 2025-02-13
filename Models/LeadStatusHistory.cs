@@ -9,15 +9,13 @@ public partial class LeadStatusHistory
 
     public int LeadId { get; set; }
 
-    public int? UserId { get; set; }
-
     public string OldStatus { get; set; } = null!;
 
     public string NewStatus { get; set; } = null!;
 
-    public DateTime? ChangedAt { get; set; }
+    public int? ChangedBy { get; set; }
+
+    public virtual User? ChangedByNavigation { get; set; }
 
     public virtual Lead Lead { get; set; } = null!;
-
-    public virtual User? User { get; set; }
 }

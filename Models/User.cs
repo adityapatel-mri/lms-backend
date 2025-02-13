@@ -13,11 +13,13 @@ public partial class User
 
     public string Password { get; set; } = null!;
 
-    public string Role { get; set; } = null!;
+    public string? Role { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
+
+    public virtual ICollection<LeadActivity> LeadActivities { get; set; } = new List<LeadActivity>();
 
     public virtual ICollection<LeadStatusHistory> LeadStatusHistories { get; set; } = new List<LeadStatusHistory>();
 

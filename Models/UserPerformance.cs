@@ -9,11 +9,9 @@ public partial class UserPerformance
 
     public int UserId { get; set; }
 
-    public int? LeadsHandled { get; set; }
+    public long? LeadsAssigned { get; set; }
 
-    public int? LeadsConverted { get; set; }
-
-    public decimal? ResponseTimeAvg { get; set; }
+    public long? LeadsConverted { get; set; }
 
     public DateTime? LastUpdated { get; set; }
 

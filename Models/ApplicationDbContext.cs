@@ -18,6 +18,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Lead> Leads { get; set; }
 
+    public virtual DbSet<LeadActivity> LeadActivities { get; set; }
+
     public virtual DbSet<LeadStatusHistory> LeadStatusHistories { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
@@ -40,9 +42,7 @@ public partial class ApplicationDbContext : DbContext
 
             entity.ToTable("leads");
 
-            entity.HasIndex(e => e.Email, "email").IsUnique();
-
-            entity.HasIndex(e => e.AssignedTo, "fk_lead_assigned_to");
+            entity.HasIndex(e => e.AssignedTo, "leads_assigned_to_foreign");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AssignedTo).HasColumnName("assigned_to");
@@ -51,14 +51,11 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnType("timestamp")
                 .HasColumnName("created_at");
             entity.Property(e => e.Email)
-                .HasMaxLength(150)
+                .HasMaxLength(255)
                 .HasColumnName("email");
             entity.Property(e => e.Name)
-                .HasMaxLength(100)
+                .HasMaxLength(50)
                 .HasColumnName("name");
-            entity.Property(e => e.Notes)
-                .HasColumnType("text")
-                .HasColumnName("notes");
             entity.Property(e => e.Phone)
                 .HasMaxLength(20)
                 .HasColumnName("phone");
@@ -68,7 +65,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnName("source");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'New'")
-                .HasColumnType("enum('New','Contacted','Follow-up','Converted','Lost')")
+                .HasColumnType("enum('New','Contacted','Follow-Up','Converted','Lost')")
                 .HasColumnName("status");
             entity.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnAddOrUpdate()
@@ -79,7 +76,42 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.AssignedToNavigation).WithMany(p => p.Leads)
                 .HasForeignKey(d => d.AssignedTo)
                 .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_lead_assigned_to");
+                .HasConstraintName("leads_assigned_to_foreign");
+        });
+
+        modelBuilder.Entity<LeadActivity>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("lead_activity");
+
+            entity.HasIndex(e => e.LeadId, "lead_activity_lead_id_foreign");
+
+            entity.HasIndex(e => e.PerformedBy, "lead_activity_performed_by_foreign");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp")
+                .HasColumnName("created_at");
+            entity.Property(e => e.LeadId).HasColumnName("lead_id");
+            entity.Property(e => e.Notes)
+                .HasColumnType("text")
+                .HasColumnName("notes");
+            entity.Property(e => e.PerformedBy).HasColumnName("performed_by");
+            entity.Property(e => e.Type)
+                .HasDefaultValueSql("'Other'")
+                .HasColumnType("enum('Call','Email','InPerson','Other')")
+                .HasColumnName("type");
+
+            entity.HasOne(d => d.Lead).WithMany(p => p.LeadActivities)
+                .HasForeignKey(d => d.LeadId)
+                .HasConstraintName("lead_activity_lead_id_foreign");
+
+            entity.HasOne(d => d.PerformedByNavigation).WithMany(p => p.LeadActivities)
+                .HasForeignKey(d => d.PerformedBy)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("lead_activity_performed_by_foreign");
         });
 
         modelBuilder.Entity<LeadStatusHistory>(entity =>
@@ -88,32 +120,28 @@ public partial class ApplicationDbContext : DbContext
 
             entity.ToTable("lead_status_history");
 
-            entity.HasIndex(e => e.LeadId, "fk_status_lead");
+            entity.HasIndex(e => e.ChangedBy, "lead_status_history_changed_by_foreign");
 
-            entity.HasIndex(e => e.UserId, "fk_status_user");
+            entity.HasIndex(e => e.LeadId, "lead_status_history_lead_id_foreign");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ChangedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp")
-                .HasColumnName("changed_at");
+            entity.Property(e => e.ChangedBy).HasColumnName("changed_by");
             entity.Property(e => e.LeadId).HasColumnName("lead_id");
             entity.Property(e => e.NewStatus)
-                .HasColumnType("enum('New','Contacted','Follow-up','Converted','Lost')")
+                .HasColumnType("enum('New','Contacted','Follow-Up','Converted','Lost')")
                 .HasColumnName("new_status");
             entity.Property(e => e.OldStatus)
-                .HasColumnType("enum('New','Contacted','Follow-up','Converted','Lost')")
+                .HasColumnType("enum('New','Contacted','Follow-Up','Converted','Lost')")
                 .HasColumnName("old_status");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.ChangedByNavigation).WithMany(p => p.LeadStatusHistories)
+                .HasForeignKey(d => d.ChangedBy)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("lead_status_history_changed_by_foreign");
 
             entity.HasOne(d => d.Lead).WithMany(p => p.LeadStatusHistories)
                 .HasForeignKey(d => d.LeadId)
-                .HasConstraintName("fk_status_lead");
-
-            entity.HasOne(d => d.User).WithMany(p => p.LeadStatusHistories)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.SetNull)
-                .HasConstraintName("fk_status_user");
+                .HasConstraintName("lead_status_history_lead_id_foreign");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -130,10 +158,10 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnType("timestamp")
                 .HasColumnName("created_at");
             entity.Property(e => e.Email)
-                .HasMaxLength(150)
+                .HasMaxLength(50)
                 .HasColumnName("email");
             entity.Property(e => e.Name)
-                .HasMaxLength(100)
+                .HasMaxLength(50)
                 .HasColumnName("name");
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
@@ -155,7 +183,7 @@ public partial class ApplicationDbContext : DbContext
 
             entity.ToTable("user_performance");
 
-            entity.HasIndex(e => e.UserId, "fk_performance_user");
+            entity.HasIndex(e => e.UserId, "user_performance_user_id_foreign");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.LastUpdated)
@@ -163,21 +191,17 @@ public partial class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp")
                 .HasColumnName("last_updated");
+            entity.Property(e => e.LeadsAssigned)
+                .HasDefaultValueSql("'0'")
+                .HasColumnName("leads_assigned");
             entity.Property(e => e.LeadsConverted)
                 .HasDefaultValueSql("'0'")
                 .HasColumnName("leads_converted");
-            entity.Property(e => e.LeadsHandled)
-                .HasDefaultValueSql("'0'")
-                .HasColumnName("leads_handled");
-            entity.Property(e => e.ResponseTimeAvg)
-                .HasPrecision(5, 2)
-                .HasDefaultValueSql("'0.00'")
-                .HasColumnName("response_time_avg");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserPerformances)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("fk_performance_user");
+                .HasConstraintName("user_performance_user_id_foreign");
         });
 
         OnModelCreatingPartial(modelBuilder);

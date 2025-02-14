@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LMS_Backend.Models.Entities;
 using LMS_Backend.Models;
 using BCrypt.Net;
+using LMS_Backend.Models.DTOs;
 
 namespace LMS_Backend.Controllers
 {
@@ -41,10 +43,7 @@ namespace LMS_Backend.Controllers
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            // Generate JWT Token after successful registration
-            var token = _authService.GenerateJwtToken(newUser.Email, newUser.Role);
-
-            return Ok(new { token });
+            return Ok(new { message = "Successfully registered. Please Login :)" });
         }
 
         [HttpPost("login")]
@@ -57,20 +56,8 @@ namespace LMS_Backend.Controllers
             }
 
             var userRole = user.Role;
-            var token = _authService.GenerateJwtToken(user.Id,user.Email, userRole);
+            var token = _authService.GenerateJwtToken(user.Id, user.Email, userRole);
             return Ok(new { token });
         }
     }
-    public class LoginDto
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
-    public class RegisterDto
-    {
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-    }
-
 }

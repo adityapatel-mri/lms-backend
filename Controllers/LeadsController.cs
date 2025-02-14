@@ -1,4 +1,5 @@
 ﻿using LMS_Backend.Models;
+using LMS_Backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,7 @@ namespace LMS_Backend.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles ="Admin,Manager,Sales")]
+        [Authorize]
         public async Task<ActionResult<Lead>> GetLead(int id)
         {
             var lead = await _context.Leads.FindAsync(id);

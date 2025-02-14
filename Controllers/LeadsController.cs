@@ -23,7 +23,7 @@ namespace LMS_Backend.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles ="Manager,Sales")]
+        [Authorize(Roles ="Admin,Manager,Sales")]
         public async Task<ActionResult<Lead>> GetLead(int id)
         {
             var lead = await _context.Leads.FindAsync(id);

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LMS_Backend.Models;
+namespace LMS_Backend.Models.Entities;
 
 public partial class UserPerformance
 {

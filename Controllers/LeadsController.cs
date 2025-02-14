@@ -3,6 +3,7 @@ using LMS_Backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace LMS_Backend.Controllers
 {
@@ -18,9 +19,49 @@ namespace LMS_Backend.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Lead>>> GetLeads()
         {
-            return await _context.Leads.ToListAsync();
+            // Extract user information from JWT token
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role);
+
+            if (userIdClaim == null || userRoleClaim == null)
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            int userId = int.Parse(userIdClaim.Value);
+            string userRole = userRoleClaim.Value;
+
+            IQueryable<Lead> query = _context.Leads;
+
+            if (userRole == "Sales")
+            {
+                // Sales Rep can only see their own assigned leads
+                query = query.Where(l => l.AssignedTo == userId);
+            }
+            else if (userRole == "Manager")
+            {
+                // Get IDs of Sales Reps under the manager
+                var salesReps = await _context.Users
+                    .Where(u => u.Role == "Sales" && u.ReportsTo == userId) // Sales Reps reporting to this Manager
+                    .Select(u => u.Id)
+                    .ToListAsync();
+
+                query = query.Where(l => salesReps.Contains(l.AssignedTo ?? 0)); // Filter leads assigned to those Sales Reps
+            }
+            else if (userRole == "Admin")
+            {
+                // Admin gets all leads (no filter needed)
+            }
+            else
+            {
+                return Forbid(); // Unknown role
+            }
+
+            var leads = await query.ToListAsync();
+            return Ok(leads);
         }
 
         [HttpGet("{id}")]

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using LMS_Backend.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -15,25 +16,26 @@ public class AuthService
         _configuration = configuration;
     }
 
-    public string GenerateJwtToken(string email, string role)
+    public string GenerateJwtToken(int id, string email, string role)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
         var claims = new List<Claim>
-    {
+        {
+        new Claim(ClaimTypes.NameIdentifier, id.ToString()),
         new Claim(ClaimTypes.Email, email),
-        new Claim(ClaimTypes.Role, role) 
-    };
+        new Claim(ClaimTypes.Role, role)
+        };
 
         var now = DateTime.UtcNow;
-        var expires = now.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryMinutes"])); 
-       
+        var expires = now.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryMinutes"]));
+
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = expires, 
+            Expires = expires,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
             Issuer = jwtSettings["Issuer"],
             Audience = jwtSettings["Audience"]

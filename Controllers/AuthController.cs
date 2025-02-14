@@ -57,7 +57,6 @@ namespace LMS_Backend.Controllers
             }
 
             var userRole = user.Role;
-
             var token = _authService.GenerateJwtToken(user.Email, userRole);
             return Ok(new { token });
         }

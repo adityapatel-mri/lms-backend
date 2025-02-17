@@ -10,7 +10,7 @@ namespace LMS_Backend.Controllers.APIs
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -22,6 +22,7 @@ namespace LMS_Backend.Controllers.APIs
 
         // GET: api/<UserController>
         [HttpGet]
+        [Authorize(Roles ="Admin")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             var users = await _context.Users.ToListAsync();
@@ -30,6 +31,7 @@ namespace LMS_Backend.Controllers.APIs
 
         // GET api/<UserController>/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -42,12 +44,13 @@ namespace LMS_Backend.Controllers.APIs
 
         // POST api/<UserController>
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<User>> PostUser([FromBody] UserDto user)
         {
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             if (existingUser != null)
             {
-                return BadRequest(new { message = "User already exists" });
+                return BadRequest(new { message = "User already exists." });
             }
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(user.Password);
@@ -69,6 +72,7 @@ namespace LMS_Backend.Controllers.APIs
 
         // PUT api/<UserController>/5
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutUser(int id, [FromBody] UserDto user)
         {
             if (id != user.Id)
@@ -90,6 +94,7 @@ namespace LMS_Backend.Controllers.APIs
 
         // DELETE api/<UserController>/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);

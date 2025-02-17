@@ -65,8 +65,27 @@ namespace LMS_Backend.Controllers.APIs
 
             var userRole = user.Role;
             var token = _authService.GenerateJwtToken(user.Id, user.Email, userRole);
-            return Ok(new { token });
+
+            Response.Cookies.Append("AuthToken", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
+            });
+            Response.Cookies.Append("Role", userRole);
+            return Ok(new { message = "Login successful." });
         }
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            // Reset the cookie
+            Response.Cookies.Delete("AuthToken");
+
+            return Ok(new { message = "Logout successful" });
+        }
+
         private bool IsValidEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))

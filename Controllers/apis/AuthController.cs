@@ -5,11 +5,11 @@ using LMS_Backend.Models;
 using LMS_Backend.Models.DTOs;
 using System.Text.RegularExpressions;
 
-namespace LMS_Backend.Controllers
+namespace LMS_Backend.Controllers.APIs
 {
 
     [ApiController]
-    [Route("api/auth")]
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

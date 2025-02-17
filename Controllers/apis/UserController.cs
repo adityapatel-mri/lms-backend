@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace LMS_Backend.Controllers
+namespace LMS_Backend.Controllers.APIs
 {
     [Route("api/[controller]")]
     [ApiController]

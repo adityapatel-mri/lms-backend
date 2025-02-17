@@ -14,6 +14,11 @@ namespace LMS_Backend.Controllers
     {
         public readonly ApplicationDbContext _context;
 
+        public LeadActivityController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
         // GET: api/<LeadActivityController>  
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LeadActivity>>> GetLeadActivities()
@@ -83,8 +88,16 @@ namespace LMS_Backend.Controllers
 
         // DELETE api/<LeadActivityController>/5  
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> DeleteLeadActivity(int id)
         {
+            var leadActivity = await _context.LeadActivities.FindAsync(id);
+            if (leadActivity == null)
+            {
+                return NotFound();
+            }
+            _context.LeadActivities.Remove(leadActivity);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Lead Activity Deleted." });
         }
     }
 }

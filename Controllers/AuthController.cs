@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using LMS_Backend.Models.Entities;
 using LMS_Backend.Models;
-using BCrypt.Net;
 using LMS_Backend.Models.DTOs;
 
 namespace LMS_Backend.Controllers

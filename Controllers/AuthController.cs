@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using LMS_Backend.Models.Entities;
 using LMS_Backend.Models;
 using LMS_Backend.Models.DTOs;
+using System.Text.RegularExpressions;
 
 namespace LMS_Backend.Controllers
 {
@@ -23,6 +24,10 @@ namespace LMS_Backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
+            if (!IsValidEmail(model.Email) || !IsValidPassword(model.Password))
+            {
+                return BadRequest(new { message = "Invalid email or password." });
+            }
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
             if (existingUser != null)
             {
@@ -48,6 +53,10 @@ namespace LMS_Backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
+            if (!IsValidEmail(model.Email) || !IsValidPassword(model.Password))
+            {
+                return BadRequest(new { message = "Invalid email or password." });
+            }
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
             {
@@ -57,6 +66,31 @@ namespace LMS_Backend.Controllers
             var userRole = user.Role;
             var token = _authService.GenerateJwtToken(user.Id, user.Email, userRole);
             return Ok(new { token });
+        }
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsValidPassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password))
+                return false;
+
+            // Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one digit, and one special character
+            var passwordPattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
+            return Regex.IsMatch(password, passwordPattern);
         }
     }
 }

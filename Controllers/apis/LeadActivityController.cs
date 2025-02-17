@@ -5,7 +5,7 @@ using LMS_Backend.Models;
 using LMS_Backend.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 
-namespace LMS_Backend.Controllers
+namespace LMS_Backend.Controllers.APIs
 {
     [Route("api/[controller]")]
     [ApiController]

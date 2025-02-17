@@ -1,8 +1,4 @@
-﻿using LMS_Backend.Models;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -19,7 +15,13 @@ public class AuthService
     public string GenerateJwtToken(int id, string email, string role)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+        var key = jwtSettings["Key"];
+        if (key == null)
+        {
+            throw new ArgumentNullException(nameof(key), "JWT key cannot be null");
+        }
+
+        var keyBytes = Encoding.UTF8.GetBytes(key);
 
         var claims = new List<Claim>
         {
@@ -31,12 +33,11 @@ public class AuthService
         var now = DateTime.UtcNow;
         var expires = now.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryMinutes"]));
 
-
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
             Expires = expires,
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature),
             Issuer = jwtSettings["Issuer"],
             Audience = jwtSettings["Audience"]
         };
@@ -45,6 +46,4 @@ public class AuthService
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
-
-
 }

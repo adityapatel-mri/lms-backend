@@ -12,7 +12,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
-// Configure JWT Authentication
+// JWT Authentication Configuration
 var jwtKey = builder.Configuration["JwtSettings:Key"];
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
 var jwtAudience = builder.Configuration["JwtSettings:Audience"];
@@ -29,6 +29,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies["AuthToken"];
+                return Task.CompletedTask;
+            }
         };
     });
 

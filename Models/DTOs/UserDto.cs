@@ -8,6 +8,7 @@ namespace LMS_Backend.Models.DTOs
         public string Email { get; set; } = null!;
         public string? Role { get; set; }
         public int? ReportsTo { get; set; }
-       
+        public string Password { get; set; } = null!;
+
     }
 }

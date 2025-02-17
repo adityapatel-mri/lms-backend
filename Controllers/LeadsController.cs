@@ -9,6 +9,7 @@ namespace LMS_Backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class LeadController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -65,7 +66,7 @@ namespace LMS_Backend.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize]
+        [Authorize(Roles ="Admin,Manager")]
         public async Task<ActionResult<Lead>> GetLead(int id)
         {
             var lead = await _context.Leads.FindAsync(id);

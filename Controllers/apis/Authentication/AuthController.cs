@@ -2,10 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using LMS_Backend.Models.Entities;
 using LMS_Backend.Models;
+using LMS_Backend.Services;
 using LMS_Backend.Models.DTOs;
 using System.Text.RegularExpressions;
 
-namespace LMS_Backend.Controllers.APIs
+namespace LMS_Backend.Controllers.apis.Authentication
 {
 
     [ApiController]
@@ -13,9 +14,9 @@ namespace LMS_Backend.Controllers.APIs
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly AuthService _authService;
+        private readonly IAuthService _authService;
 
-        public AuthController(ApplicationDbContext context, AuthService authService)
+        public AuthController(ApplicationDbContext context, IAuthService authService)
         {
             _context = context;
             _authService = authService;
@@ -63,8 +64,7 @@ namespace LMS_Backend.Controllers.APIs
                 return Unauthorized(new { message = "Invalid credentials" });
             }
 
-            var userRole = user.Role;
-            var token = _authService.GenerateJwtToken(user.Id, user.Email, userRole);
+            var token = _authService.GenerateJwtToken(user.Id, user.Email, user.Role ?? "Sales");
 
             Response.Cookies.Append("AuthToken", token, new CookieOptions
             {
@@ -73,7 +73,7 @@ namespace LMS_Backend.Controllers.APIs
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
-            Response.Cookies.Append("Role", userRole);
+            Response.Cookies.Append("Role", user.Role ?? "Sales");
             return Ok(new { message = "Login successful." });
         }
 

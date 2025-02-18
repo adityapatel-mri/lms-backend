@@ -55,8 +55,15 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpPost]
-        public async Task<ActionResult<UserPerformance>> PostUserPerformance([FromBody] UserPerformanceDto userPerformance)
+        public async Task<ActionResult<UserPerformance>> PostUserPerformance([FromBody] UserPerformanceDto userPerformanceDto)
         {
+            var userPerformance = new UserPerformance
+            {
+                UserId = userPerformanceDto.UserId,
+                LeadsAssigned = userPerformanceDto.LeadsAssigned,
+                LeadsConverted = userPerformanceDto.LeadsConverted,
+            };
+
             _context.UserPerformances.Add(userPerformance);
             await _context.SaveChangesAsync();
 
@@ -66,7 +73,7 @@ namespace LMS_Backend.Controllers.APIs
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUserPerformance(int id, [FromBody] UserPerformanceDto userPerformanceDto)
         {
-            var userPerformance = await _context.UserPerformances.FindAsync(u => u.UserId == id);
+            var userPerformance = await _context.UserPerformances.FirstOrDefaultAsync(u => u.UserId == id);
             if (userPerformance == null)
             {
                 return NotFound();
@@ -75,7 +82,6 @@ namespace LMS_Backend.Controllers.APIs
             userPerformance.UserId = userPerformanceDto.UserId;
             userPerformance.LeadsAssigned = userPerformanceDto.LeadsAssigned;
             userPerformance.LeadsConverted = userPerformanceDto.LeadsConverted;
-            userPerformance.LastUpdated = userPerformanceDto.LastUpdated;
 
             _context.Entry(userPerformance).State = EntityState.Modified;
 

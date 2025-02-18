@@ -1,8 +1,11 @@
-public class UserPerformanceDto
+namespace LMS_Backend.Models.DTOs
 {
-    public int Id { get; set; }
-    public int UserId { get; set; }
-    public long? LeadsAssigned { get; set; }
-    public long? LeadsConverted { get; set; }
+    public class UserPerformanceDto
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public long? LeadsAssigned { get; set; }
+        public long? LeadsConverted { get; set; }
+    }
 }
 

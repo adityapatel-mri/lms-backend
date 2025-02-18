@@ -1,4 +1,5 @@
 using LMS_Backend.Models;
+using LMS_Backend.Models.DTOs;
 using LMS_Backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +40,7 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpPost]
-        public async Task<ActionResult<LeadStatusHistory>> PostLeadStatusHistory(LeadStatusHistory leadStatusHistory)
+        public async Task<ActionResult<LeadStatusHistory>> PostLeadStatusHistory([FromBody] LeadStatusHistoryDto leadStatusHistory)
         {
             _context.LeadStatusHistories.Add(leadStatusHistory);
             await _context.SaveChangesAsync();
@@ -48,7 +49,7 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutLeadStatusHistory(int id, LeadStatusHistory leadStatusHistory)
+        public async Task<IActionResult> PutLeadStatusHistory(int id, [FromBody] LeadStatusHistoryDto leadStatusHistory)
         {
             if (id != leadStatusHistory.Id)
             {

@@ -21,9 +21,23 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserPerformance>>> GetUserPerformances()
+        [Authorize(Roles ="Admin,Manager")]
+        public async Task<ActionResult<IEnumerable<object>>> GetUserPerformances()
         {
-            return await _context.UserPerformances.ToListAsync();
+            var userPerformances = await _context.UserPerformances
+                .Join(_context.Users,
+                      up => up.UserId,
+                      u => u.Id,
+                      (up, u) => new
+                      {
+                          UserName = u.Name,
+                          up.LeadsAssigned,
+                          up.LeadsConverted,
+                          up.LastUpdated
+                      })
+                .ToListAsync();
+
+            return Ok(userPerformances);
         }
 
         [HttpGet("{id}")]
@@ -100,7 +114,7 @@ namespace LMS_Backend.Controllers.APIs
 
         private bool UserPerformanceExists(int id)
         {
-            return _context.UserPerformances.Any(e => e.Id == id);
+            return _context.UserPerformances.Any(e => e.UserId == id);
         }
     }
 }

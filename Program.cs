@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using LMS_Backend.Models;
+using LMS_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

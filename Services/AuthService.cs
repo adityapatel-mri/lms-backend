@@ -3,47 +3,55 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-public class AuthService
+namespace LMS_Backend.Services
 {
-    private readonly IConfiguration _configuration;
-
-    public AuthService(IConfiguration configuration)
+    public interface IAuthService
     {
-        _configuration = configuration;
+        string GenerateJwtToken(int userId, string email, string role);
     }
 
-    public string GenerateJwtToken(int id, string email, string role)
+    public class AuthService : IAuthService
     {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var key = jwtSettings["Key"];
-        if (key == null)
+        private readonly IConfiguration _configuration;
+
+        public AuthService(IConfiguration configuration)
         {
-            throw new ArgumentNullException(nameof(key), "JWT key cannot be null");
+            _configuration = configuration;
         }
 
-        var keyBytes = Encoding.UTF8.GetBytes(key);
+        public string GenerateJwtToken(int id, string email, string role)
+        {
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var key = jwtSettings["Key"];
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key), "JWT key cannot be null");
+            }
 
-        var claims = new List<Claim>
+            var keyBytes = Encoding.UTF8.GetBytes(key);
+
+            var claims = new List<Claim>
         {
         new Claim(ClaimTypes.NameIdentifier, id.ToString()),
         new Claim(ClaimTypes.Email, email),
         new Claim(ClaimTypes.Role, role)
         };
 
-        var now = DateTime.UtcNow;
-        var expires = now.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryMinutes"]));
+            var now = DateTime.UtcNow;
+            var expires = now.AddMinutes(Convert.ToDouble(jwtSettings["ExpiryMinutes"]));
 
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = expires,
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature),
-            Issuer = jwtSettings["Issuer"],
-            Audience = jwtSettings["Audience"]
-        };
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = expires,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature),
+                Issuer = jwtSettings["Issuer"],
+                Audience = jwtSettings["Audience"]
+            };
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
     }
 }

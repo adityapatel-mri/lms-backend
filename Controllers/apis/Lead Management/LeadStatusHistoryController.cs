@@ -1,11 +1,12 @@
 using LMS_Backend.Models;
+using LMS_Backend.Models.DTOs;
 using LMS_Backend.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace LMS_Backend.Controllers.APIs
+namespace LMS_Backend.Controllers.apis.Authentication
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -39,8 +40,16 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpPost]
-        public async Task<ActionResult<LeadStatusHistory>> PostLeadStatusHistory(LeadStatusHistory leadStatusHistory)
+        public async Task<ActionResult<LeadStatusHistory>> PostLeadStatusHistory([FromBody] LeadStatusHistoryDto leadStatusHistoryDto)
         {
+            var leadStatusHistory = new LeadStatusHistory
+            {
+                LeadId = leadStatusHistoryDto.LeadId,
+                OldStatus = leadStatusHistoryDto.OldStatus,
+                NewStatus = leadStatusHistoryDto.NewStatus,
+                ChangedBy = leadStatusHistoryDto.ChangedBy
+            };
+
             _context.LeadStatusHistories.Add(leadStatusHistory);
             await _context.SaveChangesAsync();
 
@@ -48,12 +57,21 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutLeadStatusHistory(int id, LeadStatusHistory leadStatusHistory)
+        public async Task<IActionResult> PutLeadStatusHistory(int id, [FromBody] LeadStatusHistoryDto leadStatusHistoryDto)
         {
-            if (id != leadStatusHistory.Id)
+            if (id != leadStatusHistoryDto.Id)
             {
                 return BadRequest();
             }
+
+            var leadStatusHistory = new LeadStatusHistory
+            {
+                Id = leadStatusHistoryDto.Id,
+                LeadId = leadStatusHistoryDto.LeadId,
+                OldStatus = leadStatusHistoryDto.OldStatus,
+                NewStatus = leadStatusHistoryDto.NewStatus,
+                ChangedBy = leadStatusHistoryDto.ChangedBy
+            };
 
             _context.Entry(leadStatusHistory).State = EntityState.Modified;
 

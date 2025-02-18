@@ -14,9 +14,9 @@ namespace LMS_Backend.Controllers.apis.Authentication
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IAuthService _authService;
+        private readonly AuthService _authService;
 
-        public AuthController(ApplicationDbContext context, IAuthService authService)
+        public AuthController(ApplicationDbContext context, AuthService authService)
         {
             _context = context;
             _authService = authService;

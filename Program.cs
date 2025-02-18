@@ -7,6 +7,16 @@ using LMS_Backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -47,7 +57,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
+app.UseCors("AllowAllOrigins");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

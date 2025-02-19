@@ -11,7 +11,7 @@ namespace LMS_Backend.Controllers
     public class ValuesController : ControllerBase
     {
         [HttpGet]
-        public ActionResult Get(int id)
+        public ActionResult Get()
         {
             return Ok(new { message="Server says hiii." });
         }

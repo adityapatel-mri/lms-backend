@@ -66,22 +66,19 @@ namespace LMS_Backend.Controllers.apis.Authentication
 
             var token = _authService.GenerateJwtToken(user.Id, user.Email, user.Role ?? "Sales");
 
-            Response.Cookies.Append("AuthToken", token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddHours(1)
-            });
-            Response.Cookies.Append("Role", user.Role ?? "Sales");
-            return Ok(new { message = "Login successful." });
+        
+            // Store the token in the session
+            HttpContext.Session.SetString("AuthToken", token);
+            HttpContext.Session.SetString("Role", user.Role ?? "Sales");
+
+            return Ok(new { message = "Login successful.", authToken = token});
         }
 
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            // Reset the cookie
-            Response.Cookies.Delete("AuthToken");
+           
+            HttpContext.Session.Clear();
 
             return Ok(new { message = "Logout successful" });
         }

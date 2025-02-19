@@ -66,20 +66,18 @@ namespace LMS_Backend.Controllers.apis.Authentication
 
             var token = _authService.GenerateJwtToken(user.Id, user.Email, user.Role ?? "Sales");
 
-        
+
             // Store the token in the session
             HttpContext.Session.SetString("AuthToken", token);
             HttpContext.Session.SetString("Role", user.Role ?? "Sales");
 
-            return Ok(new { message = "Login successful.", authToken = token});
+            return Ok(new { message = "Login successful.", authToken = token, role = user.Role });
         }
 
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-           
             HttpContext.Session.Clear();
-
             return Ok(new { message = "Logout successful" });
         }
 
@@ -97,6 +95,13 @@ namespace LMS_Backend.Controllers.apis.Authentication
             {
                 return false;
             }
+        }
+        private bool IsVaildName(string name)
+        {
+            bool validName = false;
+            if (string.IsNullOrWhiteSpace(name))
+                return validName;
+            return !validName;
         }
 
         private bool IsValidPassword(string password)

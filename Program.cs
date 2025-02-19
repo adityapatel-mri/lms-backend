@@ -77,20 +77,20 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-//// Handle preflight requests
-//app.Use(async (context, next) =>
-//{
-//    if (context.Request.Method == "OPTIONS")
-//    {
-//        context.Response.Headers.Add("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
-//        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-//        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//        context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-//        context.Response.StatusCode = 204;
-//        return;
-//    }
-//    await next();
-//});
+// Handle preflight requests
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.Headers.Add("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
+        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+        context.Response.StatusCode = 204;
+        return;
+    }
+    await next();
+});
 
 app.MapControllers();
 app.Run();

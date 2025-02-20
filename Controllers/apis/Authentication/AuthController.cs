@@ -14,9 +14,9 @@ namespace LMS_Backend.Controllers.apis.Authentication
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IAuthService _authService;
+        private readonly AuthService _authService;
 
-        public AuthController(ApplicationDbContext context, IAuthService authService)
+        public AuthController(ApplicationDbContext context, AuthService authService)
         {
             _context = context;
             _authService = authService;
@@ -54,7 +54,7 @@ namespace LMS_Backend.Controllers.apis.Authentication
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            if (!IsValidEmail(model.Email) || !IsValidPassword(model.Password))
+            if (model.Email == null || model.Password == null || !IsValidEmail(model.Email) || !IsValidPassword(model.Password))
             {
                 return BadRequest(new { message = "Invalid email or password." });
             }
@@ -66,23 +66,18 @@ namespace LMS_Backend.Controllers.apis.Authentication
 
             var token = _authService.GenerateJwtToken(user.Id, user.Email, user.Role ?? "Sales");
 
-            Response.Cookies.Append("AuthToken", token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.AddHours(1)
-            });
-            Response.Cookies.Append("Role", user.Role ?? "Sales");
-            return Ok(new { message = "Login successful." });
+
+            // Store the token in the session
+            HttpContext.Session.SetString("AuthToken", token);
+            HttpContext.Session.SetString("Role", user.Role ?? "Sales");
+
+            return Ok(new { message = "Login successful.", authToken = token, role = user.Role });
         }
 
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            // Reset the cookie
-            Response.Cookies.Delete("AuthToken");
-
+            HttpContext.Session.Clear();
             return Ok(new { message = "Logout successful" });
         }
 
@@ -100,6 +95,13 @@ namespace LMS_Backend.Controllers.apis.Authentication
             {
                 return false;
             }
+        }
+        private bool IsVaildName(string name)
+        {
+            bool validName = false;
+            if (string.IsNullOrWhiteSpace(name))
+                return validName;
+            return !validName;
         }
 
         private bool IsValidPassword(string password)

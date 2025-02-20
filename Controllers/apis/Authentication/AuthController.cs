@@ -54,7 +54,7 @@ namespace LMS_Backend.Controllers.apis.Authentication
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
-            if (!IsValidEmail(model.Email) || !IsValidPassword(model.Password))
+            if (model.Email == null || model.Password == null || !IsValidEmail(model.Email) || !IsValidPassword(model.Password))
             {
                 return BadRequest(new { message = "Invalid email or password." });
             }

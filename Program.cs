@@ -35,7 +35,7 @@ builder.Services.AddSession(options =>
 });
 
 // JWT Authentication Configuration
-var jwtKey = builder.Configuration["JwtSettings:Key"];
+var jwtKey = builder.Configuration["JwtSettings:Key"] ?? throw new ArgumentNullException("JwtSettings:Key");
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
 var jwtAudience = builder.Configuration["JwtSettings:Audience"];
 

@@ -1,5 +1,7 @@
-﻿using LMS_Backend.Models;
+﻿using LMS_Backend.Controllers.apis.Authentication;
+using LMS_Backend.Models;
 using LMS_Backend.Models.Entities;
+using LMS_Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,15 +15,17 @@ namespace LMS_Backend.Controllers.APIs
     public class LeadController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly LeadStatusHistoryService _leadStatusHistoryController;
 
-        public LeadController(ApplicationDbContext context)
+        public LeadController(ApplicationDbContext context, LeadStatusHistoryService leadStatusHistoryController)
         {
             _context = context;
+            _leadStatusHistoryController = leadStatusHistoryController;
         }
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult> GetLeads()
+        public async Task<ActionResult<IEnumerable<Lead>>> GetLeads()
         {
             // Extract user information from JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -68,12 +72,25 @@ namespace LMS_Backend.Controllers.APIs
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToDictionary(g => g.Status, g => g.Count);
 
+            // Create the response object
+            var response = new
+            {
+                leads,
+                leadCount = new
+                {
+                    New = leadCounts.ContainsKey("New") ? leadCounts["New"] : 0,
+                    Contacted = leadCounts.ContainsKey("Contacted") ? leadCounts["Contacted"] : 0,
+                    FollowUp = leadCounts.ContainsKey("FollowUp") ? leadCounts["FollowUp"] : 0,
+                    Converted = leadCounts.ContainsKey("Converted") ? leadCounts["Converted"] : 0,
+                    Lost = leadCounts.ContainsKey("Lost") ? leadCounts["Lost"] : 0
+                }
+            };
 
-            return Ok(new {leads, leadCounts});
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles ="Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<ActionResult<Lead>> GetLead(int id)
         {
             var lead = await _context.Leads.FindAsync(id);
@@ -90,11 +107,27 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Sales")]
         public async Task<IActionResult> UpdateLead(int id, Lead lead)
         {
             if (id != lead.Id) return BadRequest();
-            _context.Entry(lead).State = EntityState.Modified;
+
+            var existingLead = await _context.Leads.FindAsync(id);
+            if (existingLead == null) return NotFound();
+
+            var oldStatus = existingLead.Status;
+            var newStatus = lead.Status;
+
+            _context.Entry(existingLead).CurrentValues.SetValues(lead);
             await _context.SaveChangesAsync();
+
+            if (oldStatus != newStatus)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                int changedBy = int.Parse(userIdClaim.Value);
+                await _leadStatusHistoryController.LogStatusChange(id, oldStatus, newStatus, changedBy);
+            }
+
             return NoContent();
         }
 
@@ -107,5 +140,7 @@ namespace LMS_Backend.Controllers.APIs
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        
     }
 }

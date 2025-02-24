@@ -19,8 +19,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<LeadStatusHistoryService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -34,6 +34,12 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
     options.IdleTimeout = TimeSpan.FromHours(1);
 });
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
 
 // JWT Authentication Configuration
 var jwtKey = builder.Configuration["JwtSettings:Key"] ?? throw new ArgumentNullException("JwtSettings:Key");
@@ -64,11 +70,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-    });
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -82,21 +83,6 @@ app.UseAuthorization();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
-// Handle preflight requests
-//app.Use(async (context, next) =>
-//{
-//    if (context.Request.Method == "OPTIONS")
-//    {
-//        context.Response.Headers.Add("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
-//        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-//        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//        context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-//        context.Response.StatusCode = 204;
-//        return;
-//    }
-//    await next();
-//});
 
 app.MapControllers();
 app.Run();

@@ -113,5 +113,7 @@ namespace LMS_Backend.Controllers.apis.Authentication
         {
             return _context.LeadStatusHistories.Any(e => e.Id == id);
         }
+
+ 
     }
 }

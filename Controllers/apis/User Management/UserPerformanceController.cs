@@ -37,7 +37,7 @@ namespace LMS_Backend.Controllers.APIs
             int userId = int.Parse(userIdClaim.Value);
             string userRole = userRoleClaim.Value;
 
-            IQueryable<UserPerformance> query = _context.UserPerformances;
+            IQueryable<UserPerformance> query = _context.UserPerformances.Include(up => up.User);
             if (userRole == "Manager")
             {
                 // Get IDs of Sales Reps under the manager
@@ -62,22 +62,40 @@ namespace LMS_Backend.Controllers.APIs
                 return Forbid(); // Unknown role
             }
 
-            var userPerformances = await query.ToListAsync();
+            var userPerformances = await query
+                .Select(up => new
+                {
+                    Username = up.User.Name,
+                    up.LeadsAssigned,
+                    up.LeadsConverted,
+                    up.LastUpdated
+                })
+                .ToListAsync();
+
             return Ok(userPerformances);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserPerformance>> GetUserPerformance(int id)
+        public async Task<ActionResult> GetUserPerformance(int id)
         {
             var userPerformance = await _context.UserPerformances
-                .FirstOrDefaultAsync(up => up.UserId == id);
+                .Include(up => up.User)
+                .Where(up => up.UserId == id)
+                .Select(up => new
+                {
+                    Username = up.User.Name,
+                    up.LeadsAssigned,
+                    up.LeadsConverted,
+                    up.LastUpdated
+                })
+                .FirstOrDefaultAsync();
 
             if (userPerformance == null)
             {
                 return NotFound();
             }
 
-            return userPerformance;
+            return Ok(userPerformance);
         }
 
         [HttpPost]
@@ -147,6 +165,44 @@ namespace LMS_Backend.Controllers.APIs
         private bool UserPerformanceExists(int id)
         {
             return _context.UserPerformances.Any(e => e.UserId == id);
+        }
+
+        // New route to increment leads assigned by one
+        [HttpPost("{userId}/increment-assigned")]
+        public async Task<IActionResult> IncrementLeadsAssigned(int userId)
+        {
+            var userPerformance = await _context.UserPerformances.FirstOrDefaultAsync(up => up.UserId == userId);
+            if (userPerformance == null)
+            {
+                return NotFound();
+            }
+
+            userPerformance.LeadsAssigned = (userPerformance.LeadsAssigned ?? 0) + 1;
+            userPerformance.LastUpdated = DateTime.UtcNow;
+
+            _context.Entry(userPerformance).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Leads assigned incremented successfully." });
+        }
+
+        // New route to increment leads converted by one
+        [HttpPost("{userId}/increment-converted")]
+        public async Task<IActionResult> IncrementLeadsConverted(int userId)
+        {
+            var userPerformance = await _context.UserPerformances.FirstOrDefaultAsync(up => up.UserId == userId);
+            if (userPerformance == null)
+            {
+                return NotFound();
+            }
+
+            userPerformance.LeadsConverted = (userPerformance.LeadsConverted ?? 0) + 1;
+            userPerformance.LastUpdated = DateTime.UtcNow;
+
+            _context.Entry(userPerformance).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Leads converted incremented successfully." });
         }
     }
 }

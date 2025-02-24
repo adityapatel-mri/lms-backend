@@ -17,7 +17,7 @@ public partial class LeadActivity
 
     public DateTime? CreatedAt { get; set; }
 
-    public virtual Lead Lead { get; set; } = null!;
+    public virtual Lead? Lead { get; set; } = null!;
 
     public virtual User? PerformedByNavigation { get; set; }
 }

@@ -25,7 +25,11 @@ namespace LMS_Backend.Controllers.apis.Authentication
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
-            if (!IsValidEmail(model.Email) || !IsValidPassword(model.Password) || IsVaildName(model.Name))
+            if (IsVaildName(model.Name))
+            {
+                return BadRequest(new { message = "Please enter a name. :)" });
+            }
+            if (!IsValidEmail(model.Email) || !IsValidPassword(model.Password))
             {
                 return BadRequest(new { message = "Invalid email or password." });
             }

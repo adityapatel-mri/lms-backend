@@ -4,6 +4,7 @@ using LMS_Backend.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 
 namespace LMS_Backend.Controllers.APIs
@@ -21,22 +22,47 @@ namespace LMS_Backend.Controllers.APIs
         }
 
         [HttpGet]
-        [Authorize(Roles ="Admin,Manager")]
-        public async Task<ActionResult<IEnumerable<object>>> GetUserPerformances()
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<ActionResult> GetUserPerformances()
         {
-            var userPerformances = await _context.UserPerformances
-                .Join(_context.Users,
-                      up => up.UserId,
-                      u => u.Id,
-                      (up, u) => new
-                      {
-                          UserName = u.Name,
-                          up.LeadsAssigned,
-                          up.LeadsConverted,
-                          up.LastUpdated
-                      })
-                .ToListAsync();
+            // Extract user information from JWT token
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role);
 
+            if (userIdClaim == null || userRoleClaim == null)
+            {
+                return Unauthorized(new { message = "Invalid user token." });
+            }
+
+            int userId = int.Parse(userIdClaim.Value);
+            string userRole = userRoleClaim.Value;
+
+            IQueryable<UserPerformance> query = _context.UserPerformances;
+            if (userRole == "Manager")
+            {
+                // Get IDs of Sales Reps under the manager
+                var salesReps = await _context.Users
+                    .Where(u => u.Role == "Sales" && u.ReportsTo == userId) // Sales Reps reporting to this Manager
+                    .Select(u => u.Id)
+                    .ToListAsync();
+
+                query = query.Where(up => salesReps.Contains(up.UserId)); // Filter UP of those Sales Reps
+            }
+            else if (userRole == "Admin")
+            {
+                var managers = await _context.Users
+                    .Where(u => u.Role == "Manager" && u.ReportsTo == userId) // Manager reporting to this Admin
+                    .Select(u => u.Id)
+                    .ToListAsync();
+
+                query = query.Where(up => managers.Contains(up.UserId));
+            }
+            else
+            {
+                return Forbid(); // Unknown role
+            }
+
+            var userPerformances = await query.ToListAsync();
             return Ok(userPerformances);
         }
 

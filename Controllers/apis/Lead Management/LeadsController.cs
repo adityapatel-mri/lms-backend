@@ -69,7 +69,6 @@ namespace LMS_Backend.Controllers.APIs
                 .ToDictionary(g => g.Status, g => g.Count);
 
 
-
             return Ok(new {leads, leadCounts});
         }
 

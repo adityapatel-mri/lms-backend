@@ -19,6 +19,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -63,6 +64,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    });
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

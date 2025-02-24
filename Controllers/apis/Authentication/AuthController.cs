@@ -75,7 +75,7 @@ namespace LMS_Backend.Controllers.apis.Authentication
             HttpContext.Session.SetString("AuthToken", token);
             HttpContext.Session.SetString("Role", user.Role ?? "Sales");
 
-            return Ok(new { message = "Login successful.", authToken = token, role = user.Role });
+            return Ok(new { message = "Login successful.", authToken = token, role = user.Role, name = user.Name });
         }
 
         [HttpPost("logout")]

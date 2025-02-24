@@ -21,7 +21,7 @@ namespace LMS_Backend.Controllers.APIs
 
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Lead>>> GetLeads()
+        public async Task<ActionResult> GetLeads()
         {
             // Extract user information from JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -62,7 +62,15 @@ namespace LMS_Backend.Controllers.APIs
             }
 
             var leads = await query.ToListAsync();
-            return Ok(leads);
+
+            // Calculate lead counts by status
+            var leadCounts = leads.GroupBy(l => l.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToDictionary(g => g.Status, g => g.Count);
+
+
+
+            return Ok(new {leads, leadCounts});
         }
 
         [HttpGet("{id}")]

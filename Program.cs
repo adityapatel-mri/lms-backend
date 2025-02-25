@@ -12,7 +12,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigins",
     builder =>
     {
-        builder.WithOrigins("http://127.0.0.1:5500", "https://localhost:5500")
+        builder.WithOrigins("http://127.0.0.1:4200", "http://localhost:4200")
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
@@ -59,11 +59,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
-                context.Token = context.HttpContext.Session.GetString("AuthToken");
+                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                {
+                    context.Token = authHeader.Substring("Bearer ".Length);
+                }
                 return Task.CompletedTask;
             }
         };
@@ -81,8 +86,21 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+
+// Handle preflight OPTIONS requests
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        context.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
+        context.Response.StatusCode = 204;
+        return;
+    }
+    await next();
+});
 
 app.MapControllers();
-app.Run();
+app.Run()

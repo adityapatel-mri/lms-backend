@@ -67,26 +67,10 @@ namespace LMS_Backend.Controllers.APIs
 
             var leads = await query.ToListAsync();
 
-            // Calculate lead counts by status
-            var leadCounts = leads.GroupBy(l => l.Status)
-                .Select(g => new { Status = g.Key, Count = g.Count() })
-                .ToDictionary(g => g.Status, g => g.Count);
+         
+            
 
-            // Create the response object
-            var response = new
-            {
-                leads,
-                leadCount = new
-                {
-                    New = leadCounts.ContainsKey("New") ? leadCounts["New"] : 0,
-                    Contacted = leadCounts.ContainsKey("Contacted") ? leadCounts["Contacted"] : 0,
-                    FollowUp = leadCounts.ContainsKey("FollowUp") ? leadCounts["FollowUp"] : 0,
-                    Converted = leadCounts.ContainsKey("Converted") ? leadCounts["Converted"] : 0,
-                    Lost = leadCounts.ContainsKey("Lost") ? leadCounts["Lost"] : 0
-                }
-            };
-
-            return Ok(response);
+            return Ok(leads);
         }
 
         [HttpGet("{id}")]

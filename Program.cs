@@ -21,6 +21,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<LeadStatusHistoryService>();
+builder.Services.AddScoped<LeadService>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -86,6 +88,8 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Handle preflight OPTIONS requests
 app.Use(async (context, next) =>
